@@ -3,22 +3,33 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-session_start();
+require __DIR__ . '/auth.php';
+require __DIR__ . '/db.php';
 
-$error = "";
+configure_session();
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $user = trim($_POST["user"] ?? "");
-    $pass = trim($_POST["pass"] ?? "");
+$error = '';
 
-    // DEMO: cámbialo luego por BD / hash.
-    if ($user === "admin" && $pass === "1234") {
-        session_regenerate_id(true);
-        $_SESSION["user"] = $user;
-        header("Location: panel.php");
-        exit;
-    } else {
-        $error = "Usuario o contraseña incorrectos.";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user = trim($_POST['user'] ?? '');
+    $pass = trim($_POST['pass'] ?? '');
+
+    try {
+        $stmt = db()->prepare('SELECT id, username, password_hash FROM users WHERE username = :username AND is_active = 1 LIMIT 1');
+        $stmt->execute(['username' => $user]);
+        $row = $stmt->fetch();
+
+        if ($row && password_verify($pass, $row['password_hash'])) {
+            session_regenerate_id(true);
+            $_SESSION['user'] = $row['username'];
+            $_SESSION['user_id'] = (int) $row['id'];
+            header('Location: panel.php');
+            exit;
+        }
+
+        $error = 'Usuario o contraseña incorrectos.';
+    } catch (Throwable $e) {
+        $error = 'No se pudo validar el acceso. Revisa la conexión a base de datos.';
     }
 }
 ?>
@@ -133,6 +144,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       font-size: 13px;
       margin-bottom: 12px;
     }
+
+    .hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
@@ -157,6 +174,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
       <button class="btn" type="submit">Entrar</button>
     </form>
+
+    <div class="hint">Usuarios gestionados desde MariaDB (tabla <code>users</code>).</div>
   </div>
 </body>
 </html>

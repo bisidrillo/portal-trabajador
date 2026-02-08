@@ -1,9 +1,7 @@
 <?php
-session_start();
-if (empty($_SESSION["user"])) {
-    header("Location: login.php");
-    exit;
-}
+require __DIR__ . '/auth.php';
+
+require_login();
 
 $DOCUMENT_ROOTS = require __DIR__ . "/config.php";
 
