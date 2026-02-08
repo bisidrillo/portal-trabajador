@@ -11,14 +11,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $user = trim($_POST["user"] ?? "");
     $pass = trim($_POST["pass"] ?? "");
 
-    // DEMO: cámbialo luego por BD / hash.
-    if ($user === "admin" && $pass === "1234") {
-        session_regenerate_id(true);
-        $_SESSION["user"] = $user;
-        header("Location: panel.php");
-        exit;
-    } else {
+    if ($user === "" || $pass === "") {
         $error = "Usuario o contraseña incorrectos.";
+    } else {
+        try {
+            $pdo = require __DIR__ . "/db.php";
+            $stmt = $pdo->prepare("SELECT id, username, password_hash, active, is_admin FROM users WHERE username = ? LIMIT 1");
+            $stmt->execute([$user]);
+            $row = $stmt->fetch();
+
+            if ($row && (int)$row["active"] === 1 && password_verify($pass, $row["password_hash"])) {
+                session_regenerate_id(true);
+                $_SESSION["user"] = $row["username"];
+                $_SESSION["user_id"] = (int)$row["id"];
+                $_SESSION["is_admin"] = (int)$row["is_admin"] === 1;
+                header("Location: panel.php");
+                exit;
+            }
+
+            $error = "Usuario o contraseña incorrectos.";
+        } catch (Throwable $e) {
+            $error = "Error de conexión. Inténtalo más tarde.";
+        }
     }
 }
 ?>
@@ -157,6 +171,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
       <button class="btn" type="submit">Entrar</button>
     </form>
+    <p class="subtitle" style="margin-top:12px;">
+      ¿Tienes código de invitación? <a href="register.php">Crear cuenta</a>
+    </p>
   </div>
 </body>
 </html>

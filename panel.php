@@ -226,7 +226,12 @@ if ($q !== "") {
       <h1 class="title">Panel</h1>
       <div class="muted">Bienvenido, <?= htmlspecialchars($_SESSION["user"]) ?></div>
     </div>
-    <a class="btn btn-ghost" href="logout.php">Salir</a>
+    <div style="display:flex; gap:10px;">
+      <?php if (!empty($_SESSION["is_admin"])): ?>
+        <a class="btn btn-ghost" href="invites.php">Invitaciones</a>
+      <?php endif; ?>
+      <a class="btn btn-ghost" href="logout.php">Salir</a>
+    </div>
   </div>
 
   <div class="card">
