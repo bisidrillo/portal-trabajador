@@ -7,8 +7,8 @@ return (function (): PDO {
     $host = "localhost";
     $port = "3306";
     $name = "portal-trabajadores";
-    $user = "root";
-    $pass = "Nanillo-09-1974";
+    $user = "bisidrillo";
+    $pass = "Nanillo-2026!";
 
     // Prefer unix socket on Synology if available (root often blocked over TCP).
     $socket_candidates = [
